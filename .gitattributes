@@ -1,0 +1,6 @@
+# Count the guide chapters as repository content rather than documentation.
+src/content/docs/** linguist-documentation=false
+src/content/docs/** linguist-detectable=true
+
+# Exclude generated lockfile noise from language statistics.
+package-lock.json linguist-generated=true

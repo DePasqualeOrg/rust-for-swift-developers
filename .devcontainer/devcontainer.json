@@ -1,0 +1,24 @@
+{
+  "name": "Rust for Swift Developers",
+  "dockerComposeFile": "../docker-compose.dev.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "astro-build.astro-vscode",
+        "streetsidesoftware.code-spell-checker",
+        "anthropic.claude-code"
+      ],
+      "settings": {}
+    }
+  },
+  "forwardPorts": [4321],
+  "portsAttributes": {
+    "4321": {
+      "label": "Astro Dev Server",
+      "onAutoForward": "silent"
+    }
+  },
+  "postCreateCommand": "npm install"
+}

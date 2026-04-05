@@ -1,0 +1,28 @@
+main :is(h1, h2, h3, h4, h5, h6) {
+  line-height: 1.15;
+}
+
+main h1 {
+  font-size: clamp(1.75rem, 1.55rem + 0.95vw, 2.2rem);
+}
+
+main h2 {
+  font-size: clamp(1.45rem, 1.3rem + 0.7vw, 1.8rem);
+}
+
+main h3 {
+  font-size: clamp(1.2rem, 1.1rem + 0.45vw, 1.45rem);
+}
+
+main h4 {
+  font-size: clamp(1.05rem, 1rem + 0.25vw, 1.2rem);
+}
+
+main h5 {
+  font-size: 0.95rem;
+}
+
+main h6 {
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+}

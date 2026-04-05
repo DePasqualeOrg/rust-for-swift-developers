@@ -1,0 +1,127 @@
+---
+title: Introduction
+description: A guide to Rust for Swift developers
+---
+
+If you know Swift, you already have a head start with Rust. The two languages have a surprising amount in common: strong static typing, algebraic data types, pattern matching, value semantics, and a philosophy that the compiler should catch bugs before your code ever runs. Rust takes that philosophy even further.
+
+## Commonalities
+
+Swift and Rust were designed around many of the same ideas. Here are a few side-by-side examples to give you a sense of how close they can feel:
+
+**Enums with associated values:**
+
+```swift
+// Swift
+enum NetworkError {
+    case timeout(seconds: Int)
+    case notFound(url: String)
+    case unauthorized
+}
+```
+
+```rust
+// Rust
+enum NetworkError {
+    Timeout { seconds: i32 },
+    NotFound { url: String },
+    Unauthorized,
+}
+```
+
+**Pattern matching:**
+
+```swift
+// Swift
+switch error {
+    case .timeout(let seconds):
+        print("Timed out after \(seconds)s")
+    case .notFound(let url):
+        print("Not found: \(url)")
+    case .unauthorized:
+        print("Unauthorized")
+}
+```
+
+```rust
+// Rust
+match error {
+    NetworkError::Timeout { seconds } => println!("Timed out after {seconds}s"),
+    NetworkError::NotFound { url } => println!("Not found: {url}"),
+    NetworkError::Unauthorized => println!("Unauthorized"),
+}
+```
+
+**Optionals:**
+
+```swift
+// Swift
+func findUser(id: Int) -> User? { ... }
+```
+
+```rust
+// Rust
+fn find_user(id: i32) -> Option<User> { ... }
+```
+
+Swift's `User?` and Rust's `Option<User>` express nearly the same idea: a value may or may not be present, and the type system forces callers to handle that explicitly.
+
+## Where Rust Goes Further
+
+Swift gives you safety through ARC, value types, and optionals. Rust aims for the same end result: strong memory safety and compile-time correctness, but gets there through different mechanisms and tradeoffs.
+
+### No Garbage Collector, No Reference Counting
+
+Rust has no garbage collector and no implicit reference counting in its default ownership model. Instead, the compiler tracks ownership of every value and determines at compile time when memory should be freed. There is no retain/release overhead in the default ownership model and no garbage collection pauses. Memory is freed deterministically when values go out of scope.
+
+If you opt into shared ownership with types like `Rc<T>` or `Arc<T>`, reference cycles can still happen, just as they can under ARC, but they are explicit and usually paired with `Weak<T>` to break cycles.
+
+This is Rust's most distinctive feature and the biggest adjustment for Swift developers. The ownership system is covered in depth in [Part III](./ownership-system/ownership-basics/).
+
+### Thread Safety Without Runtime Checks
+
+Swift uses actors, isolation rules, and the `Sendable` protocol to enforce concurrency safety, with the exact diagnostics depending on your language mode and compiler settings. Rust achieves the same goal through its `Send` and `Sync` traits, but these are enforced entirely through the ownership and type system. There is no runtime isolation mechanism like actors. In safe Rust, code that compiles is free of data races. This is covered in [Part VII](./concurrency/concurrency-and-parallelism/).
+
+### Zero-Cost Abstractions
+
+Rust is designed so that convenient, high-level features often compile down to very efficient machine code. That means you can use generics, iterators, and other abstractions without necessarily making your program slower. Swift can optimize these patterns too, but Rust does so more consistently.
+
+## Where Rust Shines
+
+Rust is a natural fit in several areas where Swift is not typically used:
+
+- **Systems programming**: operating systems, embedded devices, drivers, and other low-level software where you need precise control over memory layout and no runtime overhead
+- **Command-line tools**: Rust's single-binary output, fast startup time, and cross-compilation support make it well-suited for CLI tools
+- **WebAssembly**: Rust has first-class Wasm support and is one of the most widely used languages in the Wasm ecosystem
+- **Server-side and networking**: high-performance servers, proxies, and network services
+- **Libraries that need to run everywhere**: when you need a single implementation that works across platforms, languages, and runtimes
+
+## When to Use Rust Alongside Swift
+
+Rust is not a replacement for Swift. If you are building an iOS or macOS application, Swift and SwiftUI remain the right choice for the UI layer and platform integration. But Rust can be a valuable companion:
+
+- **Portable core logic**: write performance-critical or platform-agnostic library code in Rust, and consume it from Swift via FFI, UniFFI, or as a Wasm component
+- **Cross-platform libraries**: ship a single Rust implementation to Apple platforms, the web, and servers, instead of maintaining separate codebases
+- **Performance-sensitive work**: for workloads where you need predictable, low-level performance without GC pauses or ARC overhead
+- **Ecosystem access**: tap into Rust's extensive ecosystem of crates for areas where Swift's package ecosystem is thinner, for example cryptography, parsing, serialization, and networking protocols
+
+## What to Expect from This Guide
+
+This guide is written for developers who already know Swift well. Rather than teaching programming concepts from scratch, each chapter draws parallels between Swift and Rust, highlights the differences, and focuses on the areas that will feel new or surprising.
+
+The guide is structured in ten parts:
+
+- **Parts I–II** cover the basics: setting up your environment, project structure, and the language fundamentals that will feel most familiar.
+- **Part III** tackles ownership, borrowing, and lifetimes: the core concepts that distinguish Rust from Swift.
+- **Parts IV–VIII** cover traits, generics, error handling, smart pointers, concurrency, testing, and the broader ecosystem.
+- **Part IX** introduces FFI and interop with Apple platforms, setting up the comparison with the Wasm approach.
+- **Part X** covers WebAssembly, the Component Model, WASI, and running Wasm components on Apple platforms.
+
+Rust examples are written to reflect real code patterns, and many are self-contained. Swift examples are included side-by-side where they help clarify a concept.
+
+## Further Reading
+
+- [The Rust Programming Language](https://doc.rust-lang.org/book/): the official Rust book, comprehensive and free
+- [Rust by Example](https://doc.rust-lang.org/rust-by-example/): learn Rust through annotated examples
+- [Rustlings](https://github.com/rust-lang/rustlings): small exercises to get you used to reading and writing Rust
+- [Are we web yet?](https://www.arewewebyet.org/): tracks Rust's web ecosystem maturity

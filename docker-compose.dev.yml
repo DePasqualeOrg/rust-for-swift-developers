@@ -1,0 +1,23 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      # Mount source code for hot reloading
+      - .:/workspace
+      # Keep node_modules in volume (not on host)
+      - node_modules:/workspace/node_modules
+      # Exclude these directories (uses anonymous volume)
+      - /workspace/.git
+      # Persistent volumes for dev container configuration
+      - bash_history:/commandhistory
+      - claude_config:/home/node/.claude
+    ports:
+      - "4321:4321"  # Astro dev server
+    restart: no
+
+volumes:
+  node_modules:
+  bash_history:
+  claude_config:

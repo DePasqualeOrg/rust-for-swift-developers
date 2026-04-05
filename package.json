@@ -1,0 +1,19 @@
+{
+  "name": "rust-for-swift-developers",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev --host",
+    "build": "astro build",
+    "preview": "astro preview --host",
+    "dev:run-container": "docker-compose -f docker-compose.dev.yml up --build",
+    "dev:container-logs": "docker-compose -f docker-compose.dev.yml logs -f app",
+    "dev:open-in-vs-code": "devcontainer open .",
+    "update:npm-packages": "ncu --target minor -u && ncu --interactive --format group"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.38",
+    "astro": "^6.1",
+    "sharp": "^0.34"
+  }
+}
