@@ -1,0 +1,13 @@
+# Reject dependency versions published less than 3 days ago, here as well as in the dev
+# container, so the GitHub Pages deploy's install keeps the same cooldown.
+minimumReleaseAge: 4320
+
+# pnpm 11 blocks dependency install/build scripts unless they are approved here
+# (strictDepBuilds defaults to true, so an unapproved build script is a hard error:
+# ERR_PNPM_IGNORED_BUILDS). esbuild fetches its platform-specific binary and sharp
+# builds its native image bindings, so both need their scripts. The dev container
+# installs with --ignore-scripts and is unaffected; this matters for the GitHub Pages
+# deploy's `pnpm install`.
+allowBuilds:
+  esbuild: true
+  sharp: true

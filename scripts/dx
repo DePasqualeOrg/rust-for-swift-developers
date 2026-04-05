@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# Run commands inside the dev container so third-party dependency code never
+# executes on the host. Source files are edited on the host and bind-mounted in;
+# node_modules lives in a Docker volume (there is no host node_modules), so pnpm,
+# node, builds and the dev server must run through this wrapper.
+#
+# Two modes:
+#
+#   scripts/dx <cmd...>          One-off command in a throwaway container (no host
+#                                ports published). Each call gets its own container,
+#                                so any number can run in parallel without colliding —
+#                                use this for everything that finishes:
+#                                  scripts/dx pnpm build
+#
+#   scripts/dx serve <cmd...>    Long-running command (the dev server) in the
+#                                project's persistent, stably-named container, so
+#                                OrbStack gives it a stable domain. No host ports are
+#                                published — reach it from the host via OrbStack:
+#                                  Astro dev: https://app.rust-for-swift-developers.orb.local
+#                                  scripts/dx serve pnpm dev
+#                                A host without OrbStack, such as the Mac mini's Colima,
+#                                gives it no such address.
+#
+#   scripts/dx stop              Stops the persistent container and the dev server in it.
+#                                Stopping a `serve` command ends only the local client, not
+#                                the process it started in the container.
+#
+# The image is built on first use; after changing the Dockerfile, rebuild it:
+#   docker compose -f docker-compose.dev.yml build app
+# Every command first installs changed dependencies into the node_modules volume
+# (`sync-dependencies` in the image), so a dependency change needs no rebuild.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+compose=(docker compose -f docker-compose.dev.yml)
+
+# Long-running services share the one persistent `app` container so their OrbStack
+# domain stays stable across invocations. `up -d --no-recreate app` starts it when it is
+# not running and otherwise leaves it alone, including one VS Code's Dev Containers
+# started with its own overrides, so run it unconditionally rather than guarding on a
+# `ps` check that a parallel one-off `run` container could spuriously satisfy (which
+# would skip the start and break `exec`).
+if [ "${1:-}" = "serve" ]; then
+	shift
+	"${compose[@]}" up -d --no-recreate app
+	exec "${compose[@]}" exec -T -e CI=true app sync-dependencies "$@"
+fi
+
+if [ "${1:-}" = "stop" ]; then
+	exec "${compose[@]}" stop app
+fi
+
+# Default: ephemeral, parallel-safe, no published ports.
+exec "${compose[@]}" run --rm -T -e CI=true app sync-dependencies "$@"

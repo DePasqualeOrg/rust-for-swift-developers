@@ -1,0 +1,23 @@
+# Local dependencies (installed inside the image; never copy the host copy in —
+# it conflicts with pnpm's symlinked node_modules and bloats the build context)
+node_modules
+.pnpm-store
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# Environment / local
+.env
+**/.env
+*.log
+.DS_Store
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Build artifacts (rebuilt inside the container)
+dist
+.astro

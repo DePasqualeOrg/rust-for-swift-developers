@@ -1,0 +1,28 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      # Mount source code for hot reloading
+      - .:/workspace
+      # Keep node_modules in volume (not on host)
+      - node_modules:/workspace/node_modules
+      # Keep the pnpm store in a named volume too (off the host bind mount; persists
+      # across rebuilds). Matches npm_config_store_dir in the image.
+      - pnpm_store:/workspace/.pnpm-store
+      # Exclude these directories (uses anonymous volume)
+      - /workspace/.git
+      # Persistent shell history
+      - bash_history:/commandhistory
+    # No host ports published — OrbStack routes to the running container by domain, so
+    # parallel projects/agents never collide on host ports. With the container running and
+    # the Astro dev server started (pnpm dev), reach it from the host at:
+    #   Astro dev: https://app.rust-for-swift-developers.orb.local
+    #              (or http://rust-for-swift-developers-app-1.orb.local:4321)
+    restart: no
+
+volumes:
+  node_modules:
+  pnpm_store:
+  bash_history:
