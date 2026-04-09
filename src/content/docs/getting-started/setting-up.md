@@ -105,7 +105,7 @@ A few things to notice:
 - **`fn` instead of `func`**: same concept, shorter keyword.
 - **`println!` is a macro**, not a function – the `!` suffix indicates this. Macros are expanded at compile time. You can think of `println!` as similar to Swift's `print()` for now; macros are covered in detail in [Chapter 27](../../rust-ecosystem/macros/).
 - **No `import` needed**: `println!` is a macro provided by the standard library, available in every Rust program without an explicit import.
-- **Explicit `main` function required**: unlike ordinary Swift scripts or playgrounds, Rust binaries do not allow arbitrary top-level executable statements in crate source files. A binary crate uses a `fn main()`.
+- **Explicit `main` function required**: unlike ordinary Swift scripts or playgrounds, Rust binaries do not allow arbitrary top-level executable statements in crate source files. A binary crate uses a `fn main()`. In examples throughout this guide, we omit `fn main()` when it is not relevant to the concept being demonstrated.
 
 Run the program:
 

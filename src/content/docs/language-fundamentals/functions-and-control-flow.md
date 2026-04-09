@@ -4,7 +4,7 @@ sidebar:
   order: 6
 ---
 
-Rust and Swift share a common ancestor in their approach to control flow: both borrow heavily from the ML family of languages, with pattern matching, expression-based constructs, and an emphasis on exhaustiveness. But Rust takes the "everything is an expression" philosophy further than Swift does.
+Rust and Swift take a similar approach to control flow, with pattern matching, expression-based constructs, and an emphasis on exhaustiveness. But Rust takes the "everything is an expression" philosophy further than Swift does.
 
 ## Function syntax
 
@@ -15,6 +15,8 @@ The structure of a function declaration is similar in both languages. Swift uses
 func add(a: Int, b: Int) -> Int {
     return a + b
 }
+
+let sum = add(a: 5, b: 3)
 ```
 
 ```rust
@@ -23,17 +25,13 @@ fn add(a: i32, b: i32) -> i32 {
     a + b
 }
 
-fn main() {
-    let result = add(3, 4);
-    println!("{result}");
-}
+let sum = add(5, 3);
 ```
 
-Several differences are visible immediately:
+You'll notice two differences:
 
 - **No argument labels**: Rust does not have Swift's argument label system. In Swift, you call `add(a: 5, b: 3)`. In Rust, you call `add(5, 3)`. There is no concept of external parameter names.
 - **No `return` needed for the last expression**: The last expression in a Rust function body is its return value, without a `return` keyword and without a semicolon. Adding a semicolon turns the expression into a statement that returns `()`.
-- **Type annotations are required on parameters**: Unlike `let` bindings where types can be inferred, Rust always requires explicit types on function parameters and return types.
 
 ### Functions with no return value
 
@@ -50,10 +48,6 @@ func greet(name: String) {
 // Rust
 fn greet(name: &str) {
     println!("Hello, {name}!");
-}
-
-fn main() {
-    greet("Alice");
 }
 ```
 
@@ -101,7 +95,11 @@ Or, since Swift 5.9, using `if`/`else` as an expression:
 // Swift (5.9+)
 let x = 5
 let y = 10
-let description = if x + y > 10 { "big" } else { "small" }
+let description = if x + y > 10 {
+    "big"
+} else {
+    "small"
+}
 ```
 
 ## Conditionals
@@ -244,7 +242,28 @@ while n > 0 {
 }
 ```
 
-Swift's `repeat-while` (do-while in other languages) does not have a direct Rust equivalent. You can achieve the same behavior with `loop` and a conditional `break` at the end of the body.
+Swift's `repeat-while` (do-while in other languages) does not have a direct Rust equivalent. You can achieve the same behavior with `loop` and a conditional `break` at the end of the body:
+
+```swift
+// Swift
+var input = fetchInput()
+repeat {
+    process(input)
+    input = fetchInput()
+} while input != "quit"
+```
+
+```rust
+// Rust
+let mut input = fetch_input();
+loop {
+    process(input);
+    input = fetch_input();
+    if input == "quit" {
+        break;
+    }
+}
+```
 
 ### `for` loops and ranges
 
@@ -329,12 +348,6 @@ fn classify(n: i32) -> &'static str {
         return "zero";
     }
     "positive" // last expression, no return needed
-}
-
-fn main() {
-    println!("{}", classify(-5));
-    println!("{}", classify(0));
-    println!("{}", classify(7));
 }
 ```
 
