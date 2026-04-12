@@ -455,6 +455,98 @@ let first_match = (0..1_000_000)
 // Stops as soon as it finds the first match – does not compute all 1,000,000 squares
 ```
 
+## Closing the `Sequence` gap with `itertools`
+
+Swift's `Sequence` has methods like `sorted()`, `chunked(into:)`, and `Dictionary(grouping:by:)` built in. The standard Rust `Iterator` trait is deliberately minimal, focusing on the core lazy operations and leaving higher-level helpers to third-party crates. The [`itertools`](https://docs.rs/itertools) crate is the de facto companion: it adds dozens of adaptors that Swift developers will recognize, while staying consistent with the lazy iterator model. Bring it into scope with `use itertools::Itertools;` to get these methods on any iterator.
+
+### `sorted` and `sorted_by_key`
+
+The standard `Iterator` has no `sort` adaptor because sorting is inherently a whole-sequence operation that allocates. `itertools` provides one that collects into a `Vec`, sorts it, and yields the result:
+
+```rust
+// Rust
+use itertools::Itertools;
+
+let sorted: Vec<_> = [3, 1, 4, 1, 5, 9, 2, 6].into_iter().sorted().collect();
+// [1, 1, 2, 3, 4, 5, 6, 9]
+
+let by_len: Vec<_> = ["longest", "a", "medium"]
+    .into_iter()
+    .sorted_by_key(|s| s.len())
+    .collect();
+// ["a", "medium", "longest"]
+```
+
+These mirror Swift's `sorted()` and `sorted(by:)`.
+
+### `unique`
+
+Yields each distinct value once, preserving insertion order:
+
+```rust
+// Rust
+use itertools::Itertools;
+
+let distinct: Vec<_> = [1, 2, 2, 3, 1, 4].into_iter().unique().collect();
+// [1, 2, 3, 4]
+```
+
+There is also `unique_by(|x| key(x))` when you want to deduplicate by a derived key.
+
+### `chunks`
+
+Groups consecutive elements into fixed-size batches, the counterpart to Swift's `chunked(into:)`:
+
+```rust
+// Rust
+use itertools::Itertools;
+
+for chunk in &(1..=7).chunks(3) {
+    let v: Vec<_> = chunk.collect();
+    println!("{v:?}");
+}
+// [1, 2, 3]
+// [4, 5, 6]
+// [7]
+```
+
+Each chunk yields lazily from a shared `IntoChunks`, so the outer iterator's item type is a `Chunk`, not `Vec<_>` – you have to drain each chunk yourself, and a direct `.collect::<Vec<Vec<_>>>()` does not type-check. When you already have a `Vec` or slice and just need independent sub-slices, reach for `slice::chunks` instead.
+
+### `chunk_by` and `into_group_map_by`
+
+`chunk_by` groups runs of *adjacent* elements that share a key – closer to Swift Algorithms' key-based `chunked(on:)` than to the predicate-based `chunked(by:)`:
+
+```rust
+// Rust
+use itertools::Itertools;
+
+let data = [1, 1, 2, 2, 2, 3, 1];
+for (key, group) in &data.into_iter().chunk_by(|n| *n) {
+    let v: Vec<_> = group.collect();
+    println!("{key}: {v:?}");
+}
+// 1: [1, 1]
+// 2: [2, 2, 2]
+// 3: [3]
+// 1: [1]
+```
+
+Note the two separate `1` groups – `chunk_by` only collapses *adjacent* runs, not every occurrence of a key.
+
+To group *non-adjacent* elements into a map keyed by a function (Swift's `Dictionary(grouping:by:)`), use `into_group_map_by`:
+
+```rust
+// Rust
+use itertools::Itertools;
+
+let by_parity = [1, 2, 3, 4, 5].into_iter().into_group_map_by(|n| n % 2);
+// {0: [2, 4], 1: [1, 3, 5]}
+```
+
+### When to reach for `itertools`
+
+`itertools` is stable, widely used, and has negligible compile-time impact. If you find yourself collecting, sorting, and re-collecting, or writing hand-rolled loops for adaptor-style work, it is almost always the right call. For a single `sort` on a collection you already have, the standard `Vec::sort` family is enough and keeps the dependency graph lean.
+
 ## Key differences and gotchas
 
 - **Lazy by default**: Rust iterator adaptors are lazy. If you call `.map(...)` and never consume the result, the closure never runs. The compiler will warn you about unused iterators.

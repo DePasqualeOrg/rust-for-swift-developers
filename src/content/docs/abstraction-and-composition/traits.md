@@ -410,6 +410,65 @@ let v = PrettyVec(vec![1, 2, 3]);
 v.to_string(); // "[1, 2, 3]"
 ```
 
+## Extension trait pattern
+
+The orphan rule permits one case that is especially useful: you can implement a trait you own for a type you do not own. This is the direct analog to Swift's `extension String { ... }` – you attach new behavior to a standard-library type by defining a trait and implementing it:
+
+```rust
+// Rust
+trait Titlecase {
+    fn titlecase(&self) -> String;
+}
+
+impl Titlecase for str {
+    fn titlecase(&self) -> String {
+        self.split_whitespace()
+            .map(|word| {
+                let mut chars = word.chars();
+                match chars.next() {
+                    Some(c) => c.to_uppercase().collect::<String>() + chars.as_str(),
+                    None => String::new(),
+                }
+            })
+            .collect::<Vec<_>>()
+            .join(" ")
+    }
+}
+
+fn main() {
+    let heading = "hello world".titlecase();
+    println!("{heading}"); // "Hello World"
+}
+```
+
+Callers must import the trait into scope (`use your_crate::Titlecase`) before the method becomes visible. This differs from Swift, where extensions are visible as soon as the defining module is imported. The upside is that name collisions between multiple extension traits are resolved explicitly at the call site rather than silently at link time. Crates that publish a suite of extension traits often gather them in a `prelude` module so users can opt into the whole set with a single `use your_crate::prelude::*`.
+
+### Blanket implementations
+
+A blanket impl is an extension trait whose implementation applies to every type satisfying a bound. It is the Rust analog of Swift's `extension Protocol where Self: X { ... }`:
+
+```rust
+// Rust
+use std::fmt::Display;
+
+trait LoggedDisplay {
+    fn log(&self);
+}
+
+impl<T: Display> LoggedDisplay for T {
+    fn log(&self) {
+        eprintln!("[LOG] {self}");
+    }
+}
+
+fn main() {
+    42.log();
+    "hello".log();
+}
+```
+
+Every type that implements `Display` automatically implements `LoggedDisplay`. The standard library uses this pattern extensively. For example, implementing `From<T> for U` automatically gives you `Into<U> for T`, courtesy of a blanket impl `impl<T, U: From<T>> Into<U> for T` in `core`.
+
 ## Key differences and gotchas
 
 - **No stored properties in traits**: Rust traits cannot declare stored fields. Swift protocols can require properties, but only through getters (and optionally setters). In Rust, you define accessor methods instead.

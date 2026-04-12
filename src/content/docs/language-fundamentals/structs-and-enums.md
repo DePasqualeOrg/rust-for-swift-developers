@@ -76,6 +76,116 @@ let custom = Config {
 
 Swift does not have a built-in equivalent, though you can achieve a similar effect by copying a struct and modifying properties (since Swift structs are value types with `var` properties).
 
+### Config struct pattern
+
+Swift's memberwise initializers make it easy to call a function with many named options – you list the labels at the call site and omit any that have defaults. Rust functions have no argument labels and no parameter defaults, so as the number of arguments grows, call sites get harder to read. The idiomatic response is to group the options into a struct that implements `Default`, then let callers override only the fields they care about using struct update syntax:
+
+```rust
+// Rust
+#[derive(Default)]
+struct QueryOptions {
+    limit: usize,
+    offset: usize,
+    include_archived: bool,
+}
+
+fn query(_opts: QueryOptions) {
+    // ...
+}
+
+fn main() {
+    query(QueryOptions {
+        limit: 50,
+        ..Default::default()
+    });
+}
+```
+
+The field names at the call site act like Swift's argument labels, and new options can be added to `QueryOptions` without breaking existing callers. This is the Rust counterpart to Swift's memberwise init with default values.
+
+A config struct is not always the right tool. Reach for a builder when:
+
+- **Construction is staged**: the caller configures the value across several scopes or functions before handing it off.
+- **Some combinations of fields are invalid**: a builder can change its own type once a required field is set, letting the type system forbid ill-formed combinations.
+- **Construction can fail**: if building up the value surfaces errors (validation, DNS resolution, I/O), a `build(self) -> Result<...>` method is clearer than populating a struct and validating after the fact.
+
+The `reqwest::Client` and `tokio::runtime::Builder` APIs are canonical examples. Both exist because `Default` alone cannot express their construction semantics.
+
+### Per-field defaults
+
+Swift lets you attach defaults directly to stored properties: `var width: Int = 800`. Rust does not yet have this on stable, but there are several approximations.
+
+The stable baseline is a hand-written `impl Default`. It is verbose, but every approach below compiles down to this:
+
+```rust
+// Rust
+struct Window {
+    width: u32,
+    height: u32,
+    title: String,
+}
+
+impl Default for Window {
+    fn default() -> Self {
+        Window {
+            width: 800,
+            height: 600,
+            title: String::from("Untitled"),
+        }
+    }
+}
+```
+
+`#[derive(Default)]` is stable and terse, but only works when every field's type already implements `Default` and you are happy with those defaults (`0` for integers, empty strings, `false` for booleans). The derive itself offers no way to customize individual fields:
+
+```rust
+// Rust
+#[derive(Default)]
+struct Window {
+    width: u32,    // defaults to 0
+    height: u32,   // defaults to 0
+    title: String, // defaults to ""
+}
+```
+
+Third-party crates like [`smart-default`](https://docs.rs/smart-default) extend `#[derive(Default)]` with per-field attributes:
+
+```rust
+// Rust
+use smart_default::SmartDefault;
+
+#[derive(SmartDefault)]
+struct Window {
+    #[default = 800]
+    width: u32,
+    #[default = 600]
+    height: u32,
+    #[default(_code = "String::from(\"Untitled\")")]
+    title: String,
+}
+```
+
+This matches the Swift ergonomics today at the cost of an extra dependency. `smart-default` itself is stable but low-activity; before reaching for it in a long-lived project, check current releases and consider `derive-new` as a closer alternative, or a full builder crate like `bon` if you also want builder-style construction.
+
+**On the horizon.** Rust has an accepted RFC, [RFC 3681 "Default field values"](https://github.com/rust-lang/rfcs/blob/master/text/3681-default-field-values.md), that will eventually let you write defaults directly in the struct definition:
+
+```rust
+// Rust, nightly only
+#![feature(default_field_values)]
+
+struct Window {
+    width: u32 = 800,
+    height: u32 = 600,
+}
+
+fn main() {
+    let w = Window { width: 1024, .. };
+    let _ = w;
+}
+```
+
+This is currently usable only on the nightly compiler behind `#![feature(default_field_values)]`. Defaults must be const-evaluable today, which rules out things like `String::from("...")` – that restriction may relax before stabilization. The tracking issue is [rust-lang/rust#132162](https://github.com/rust-lang/rust/issues/132162). No stabilization release has been assigned, so check the current status before relying on it.
+
 ### Tuple structs
 
 Rust also supports tuple structs – structs with unnamed fields accessed by index. These are useful for creating distinct types around a single value (the newtype pattern):
@@ -191,6 +301,50 @@ fn main() {
 ```
 
 The `self` (by value) form has no direct Swift equivalent. In Swift, structs are value types and do not have the concept of ownership transfer. Methods cannot consume the instance. In Rust, `self` by value means the method takes ownership and the original is moved. This is part of the ownership system covered in [Part III](../../ownership-system/ownership-basics/).
+
+### Fluent method chaining
+
+Taking `self` by value and returning `Self` lets a method produce a modified copy of the receiver. Chaining these calls gives Rust the same feel as SwiftUI's view modifiers:
+
+```rust
+// Rust
+struct RequestConfig {
+    url: String,
+    timeout_secs: u32,
+    retries: u32,
+}
+
+impl RequestConfig {
+    fn new(url: &str) -> Self {
+        RequestConfig {
+            url: url.to_string(),
+            timeout_secs: 30,
+            retries: 0,
+        }
+    }
+
+    fn timeout(mut self, seconds: u32) -> Self {
+        self.timeout_secs = seconds;
+        self
+    }
+
+    fn retries(mut self, count: u32) -> Self {
+        self.retries = count;
+        self
+    }
+}
+
+fn main() {
+    let config = RequestConfig::new("https://example.com")
+        .timeout(5)
+        .retries(3);
+    let _ = config;
+}
+```
+
+This style is widely used in configuration-heavy crates – `reqwest::ClientBuilder`, `tokio::runtime::Builder`, and `clap::Command` all use variations of it. Some libraries prefer `&mut self -> &mut Self` for the same effect without moving the value; both forms chain identically at the call site.
+
+Chaining carries real API-design cost. Each method must take ownership of `self` (or borrow it mutably); when setters depend on each other, call order becomes part of the public API contract; and adding new configuration later is harder than adding a field to a config struct. Reach for chaining when the fluent call site is a genuine readability win; otherwise a config struct with `..Default::default()` is usually simpler.
 
 ### Multiple `impl` blocks
 
