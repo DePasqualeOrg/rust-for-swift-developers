@@ -1,5 +1,6 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import starlightThemeNova from 'starlight-theme-nova';
 
 const githubOwner =
   process.env.GITHUB_REPOSITORY_OWNER ?? process.env.GITHUB_REPOSITORY?.split('/')[0];
@@ -24,6 +25,7 @@ export default defineConfig({
       title: 'Rust for Swift Developers',
       disable404Route: true,
       customCss: ['./src/styles/starlight.css'],
+      plugins: [starlightThemeNova()],
       social: [{ icon: 'github', label: 'GitHub', href: repositoryUrl }],
       sidebar: [
         {
