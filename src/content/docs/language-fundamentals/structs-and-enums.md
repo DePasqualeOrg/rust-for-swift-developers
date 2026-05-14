@@ -103,7 +103,7 @@ fn main() {
 
 The field names at the call site act like Swift's argument labels, and new options can be added to `QueryOptions` without breaking existing callers. This is the Rust counterpart to Swift's memberwise init with default values.
 
-A config struct is not always the right tool. Reach for a builder when:
+A config struct is not always the right tool. Use a builder when:
 
 - **Construction is staged**: the caller configures the value across several scopes or functions before handing it off.
 - **Some combinations of fields are invalid**: a builder can change its own type once a required field is set, letting the type system forbid ill-formed combinations.
@@ -344,7 +344,7 @@ fn main() {
 
 This style is widely used in configuration-heavy crates – `reqwest::ClientBuilder`, `tokio::runtime::Builder`, and `clap::Command` all use variations of it. Some libraries prefer `&mut self -> &mut Self` for the same effect without moving the value; both forms chain identically at the call site.
 
-Chaining carries real API-design cost. Each method must take ownership of `self` (or borrow it mutably); when setters depend on each other, call order becomes part of the public API contract; and adding new configuration later is harder than adding a field to a config struct. Reach for chaining when the fluent call site is a genuine readability win; otherwise a config struct with `..Default::default()` is usually simpler.
+Chaining carries real API-design cost. Each method must take ownership of `self` (or borrow it mutably); when setters depend on each other, call order becomes part of the public API contract; and adding new configuration later is harder than adding a field to a config struct. Use chaining when the fluent call site is a genuine readability win; otherwise a config struct with `..Default::default()` is usually simpler.
 
 ### Multiple `impl` blocks
 

@@ -510,7 +510,7 @@ for chunk in &(1..=7).chunks(3) {
 // [7]
 ```
 
-Each chunk yields lazily from a shared `IntoChunks`, so the outer iterator's item type is a `Chunk`, not `Vec<_>` – you have to drain each chunk yourself, and a direct `.collect::<Vec<Vec<_>>>()` does not type-check. When you already have a `Vec` or slice and just need independent sub-slices, reach for `slice::chunks` instead.
+Each chunk yields lazily from a shared `IntoChunks`, so the outer iterator's item type is a `Chunk`, not `Vec<_>` – you have to drain each chunk yourself, and a direct `.collect::<Vec<Vec<_>>>()` does not type-check. When you already have a `Vec` or slice and just need independent sub-slices, use `slice::chunks` instead.
 
 ### `chunk_by` and `into_group_map_by`
 
@@ -543,7 +543,7 @@ let by_parity = [1, 2, 3, 4, 5].into_iter().into_group_map_by(|n| n % 2);
 // {0: [2, 4], 1: [1, 3, 5]}
 ```
 
-### When to reach for `itertools`
+### When to use `itertools`
 
 `itertools` is stable, widely used, and has negligible compile-time impact. If you find yourself collecting, sorting, and re-collecting, or writing hand-rolled loops for adaptor-style work, it is almost always the right call. For a single `sort` on a collection you already have, the standard `Vec::sort` family is enough and keeps the dependency graph lean.
 

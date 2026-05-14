@@ -4,7 +4,7 @@ sidebar:
   order: 20
 ---
 
-In Swift, you rarely think about where values live. Value types are usually stored inline in whatever contains them, classes are heap-allocated, and the compiler manages reference counting for you. Rust makes these decisions explicit. By default, values are owned by exactly one binding, and when you need heap allocation, shared ownership, or interior mutability, you reach for a smart pointer.
+In Swift, you rarely think about where values live. Value types are usually stored inline in whatever contains them, classes are heap-allocated, and the compiler manages reference counting for you. Rust makes these decisions explicit. By default, values are owned by exactly one binding, and when you need heap allocation, shared ownership, or interior mutability, you use a smart pointer.
 
 Smart pointers in Rust are structs that behave like references but carry additional semantics – they own the data they point to, manage its lifecycle, and enforce borrowing rules at compile time or runtime.
 

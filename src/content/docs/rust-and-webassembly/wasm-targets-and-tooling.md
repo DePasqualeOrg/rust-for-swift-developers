@@ -115,7 +115,7 @@ cargo component build --release
 
 One subtle but important detail: current `cargo-component` releases still build a `wasm32-wasip1` core module first and then adapt it into a preview2 component. Plain `cargo build --target wasm32-wasip2` uses the upstream compiler target directly. That is why the two workflows overlap, but do not produce identical build layouts or capabilities.
 
-If you only need WASI interfaces, plain `wasm32-wasip2` plus the `wasi` crate may be the simpler path. Reach for `cargo-component` when custom or third-party WIT worlds enter the picture.
+If you only need WASI interfaces, plain `wasm32-wasip2` plus the `wasi` crate may be the simpler path. Use `cargo-component` when custom or third-party WIT worlds enter the picture.
 
 ### wasm-tools
 
