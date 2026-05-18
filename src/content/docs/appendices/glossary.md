@@ -38,7 +38,7 @@ Rust-specific terminology with brief definitions. Where a Swift equivalent exist
 
 **Lifetime**: A compile-time annotation (e.g., `'a`) that tells the borrow checker how long a reference is valid. Swift has no equivalent – ARC manages object lifetimes at runtime.
 
-**Macro**: A metaprogramming construct that generates code at compile time. Declarative macros (`macro_rules!`) work by pattern matching on syntax. Procedural macros operate on the token stream directly. (Swift macros, introduced in Swift 5.9, serve a similar role but differ in mechanism.)
+**Macro**: A metaprogramming construct that generates code at compile time. Declarative macros (`macro_rules!`) work by pattern matching on syntax. Procedural macros operate on the token stream directly. (Swift macros serve a similar role but differ in mechanism.)
 
 **Module**: A namespace for organizing code within a crate. Declared with `mod`. (Swift equivalent: roughly the nesting you create with types/extensions and file organization, though Swift modules map more closely to Rust crates than to Rust modules.)
 

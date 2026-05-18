@@ -255,7 +255,7 @@ Returning `Self` prevents object safety because the caller does not know the con
 
 The `Clone` trait in Rust's standard library has this same issue, which is why `dyn Clone` is not valid. If you need a clonable trait object, you can work around it by defining a method that returns `Box<dyn Trait>` instead of `Self`.
 
-Swift's existentials have similar restrictions. Before Swift 5.7, protocols with `Self` or associated type requirements could not be used as existentials. The `any` keyword and constrained existentials have relaxed some of those restrictions, but many of the same underlying limitations apply.
+Swift's existentials have similar restrictions. The `any` keyword and constrained existentials have relaxed some of them, but many of the same underlying limitations apply.
 
 ### Making a trait object-safe
 
@@ -369,7 +369,7 @@ func describe(_ value: Any) {
 
 ## Key differences and gotchas
 
-- **Explicit `dyn` keyword**: Rust requires `dyn` to make it clear you are using dynamic dispatch. Swift uses `any` for the same purpose. The `any` keyword was introduced in Swift 5.6 as optional and became required for existentials in Swift 6. Before 5.6, existentials were written without any special keyword.
+- **Explicit `dyn` keyword**: Rust requires `dyn` to make it clear you are using dynamic dispatch. Swift uses `any` for the same purpose, and `any` became required for existentials in Swift 6.
 - **Must use a pointer**: `dyn Trait` is unsized, so you always use it behind `&`, `Box`, `Arc`, or another pointer. Swift's existentials handle this internally with a protocol witness container.
 - **Object safety rules**: Traits with methods that return `Self`, have generic parameters, or require `Self: Sized` cannot be used as trait objects. Swift has similar restrictions with existentials.
 - **No automatic boxing**: Rust does not automatically box values to create trait objects. You must explicitly write `Box::new(value)`. Swift handles boxing implicitly when you assign a concrete value to an existential variable.

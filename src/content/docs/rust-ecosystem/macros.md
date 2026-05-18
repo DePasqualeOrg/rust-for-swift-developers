@@ -269,7 +269,7 @@ Other examples of function-like procedural macros:
 
 ## How Rust macros compare to Swift macros
 
-Swift introduced expression macros, declaration macros, and attached macros starting in Swift 5.9 (SE-0382, SE-0389, and related proposals). The two systems share some goals but differ significantly in design:
+Swift supports expression macros, declaration macros, and attached macros (SE-0382, SE-0389, and related proposals). The two systems share some goals but differ significantly in design:
 
 | Aspect | Rust macros | Swift macros |
 |---|---|---|

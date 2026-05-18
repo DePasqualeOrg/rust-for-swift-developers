@@ -4,7 +4,7 @@ sidebar:
   order: 8
 ---
 
-Pattern matching is one of the areas where Swift and Rust feel most alike. Both languages have exhaustive `switch`/`match` statements, support destructuring, and use pattern matching to unwrap optional values. The syntax and terminology differ, but the underlying ideas are remarkably similar.
+Pattern matching is one of the areas where Swift and Rust feel most alike, with exhaustive `switch`/`match` statements, destructuring, and pattern-based unwrapping of optional values.
 
 ## `match` expressions
 
@@ -95,8 +95,6 @@ fn value_in_cents(coin: &Coin) -> u32 {
     }
 }
 ```
-
-Swift added `switch` as an expression in Swift 5.9, so this capability is available in both languages. However, Rust has had it since the beginning, and the idiom is deeply embedded in Rust code.
 
 ## Exhaustiveness
 
@@ -276,11 +274,11 @@ let Config { width, height, .. } = config;
 println!("{width}x{height}");
 ```
 
-Swift does not support destructuring structs in pattern matching. You would access fields individually after matching.
+Swift does not support destructuring structs in pattern matching. Fields can be accessed individually after matching.
 
 ### Destructuring enums
 
-Enum destructuring is where both languages truly shine, and where the syntax is most similar:
+The syntax for enum destructuring is similar in both languages:
 
 ```swift
 // Swift
@@ -346,7 +344,7 @@ if let Some(v) = value {
 
 In Swift, the pattern is on the left and the value being matched is on the right of `=`. In Rust, the pattern is also on the left and the value on the right, but the pattern includes the enum variant (`Some(v)`) rather than just the binding name.
 
-Swift 5.7 introduced the shorthand `if let value` (omitting `= value`), which is equivalent to `if let value = value`. Rust does not have this shorthand.
+Swift supports the shorthand `if let value` (omitting `= value`), which is equivalent to `if let value = value`. Rust does not have this shorthand.
 
 ### `if let` with `else`
 
@@ -446,30 +444,15 @@ Patterns can be nested to match complex structures:
 
 ```rust
 // Rust
-enum Expr {
-    Num(f64),
-    Add(Box<Expr>, Box<Expr>),
-    Neg(Box<Expr>),
+let result: Option<Result<i32, String>> = Some(Ok(42));
+match result {
+    Some(Ok(value)) => println!("Got {value}"),
+    Some(Err(e)) => println!("Failed: {e}"),
+    None => println!("No result"),
 }
-
-fn simplify(expr: &Expr) -> String {
-    match expr {
-        Expr::Num(n) => format!("{n}"),
-        Expr::Add(left, right) => {
-            format!("({} + {})", simplify(left), simplify(right))
-        }
-        Expr::Neg(inner) => match inner.as_ref() {
-            Expr::Neg(double_neg) => simplify(double_neg),
-            other => format!("-{}", simplify(other)),
-        },
-    }
-}
-
-let expr = Expr::Neg(Box::new(Expr::Neg(Box::new(Expr::Num(5.0)))));
-simplify(&expr); // 5
 ```
 
-You can also nest patterns directly without a second `match`:
+Each arm describes the full shape of the value in a single pattern, no inner `match` required. The same approach works with tuples:
 
 ```rust
 // Rust
@@ -513,19 +496,18 @@ Match guards are especially useful with enums:
 
 ```rust
 // Rust
-enum Temperature {
-    Celsius(f64),
-    Fahrenheit(f64),
+enum Event {
+    Click { x: i32, y: i32 },
+    KeyPress(char),
 }
 
-fn describe(temp: &Temperature) -> &str {
-    match temp {
-        Temperature::Celsius(c) if *c > 40.0 => "Extremely hot",
-        Temperature::Celsius(c) if *c > 30.0 => "Hot",
-        Temperature::Celsius(_) => "Moderate or cold",
-        Temperature::Fahrenheit(f) if *f > 104.0 => "Extremely hot",
-        Temperature::Fahrenheit(f) if *f > 86.0 => "Hot",
-        Temperature::Fahrenheit(_) => "Moderate or cold",
+fn handle(event: &Event) -> &str {
+    match event {
+        Event::Click { x, y } if *x < 0 || *y < 0 => "Out of bounds",
+        Event::Click { .. } => "Click",
+        Event::KeyPress(c) if c.is_ascii_digit() => "Digit",
+        Event::KeyPress(c) if c.is_alphabetic() => "Letter",
+        Event::KeyPress(_) => "Other key",
     }
 }
 ```

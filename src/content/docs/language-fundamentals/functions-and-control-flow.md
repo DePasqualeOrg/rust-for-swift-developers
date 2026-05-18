@@ -55,7 +55,7 @@ In both cases, omitting the return type means the function returns the unit type
 
 ## Expression-based language
 
-Rust is an expression-based language, meaning that most constructs produce a value. In Swift, `if`/`else` became usable as expressions for assignments in Swift 5.9, but Rust has been expression-based from the start. This distinction affects how you write everything from simple conditionals to complex blocks.
+Rust is an expression-based language, meaning that most constructs produce a value. Swift supports `if`/`else` as expressions for assignments, but Rust has been expression-based from the start, and the idiom runs much deeper. This distinction affects how you write everything from simple conditionals to complex blocks.
 
 ### Blocks as expressions
 
@@ -89,10 +89,10 @@ let description: String = {
 }()
 ```
 
-Or, since Swift 5.9, using `if`/`else` as an expression:
+Or, using `if`/`else` as an expression:
 
 ```swift
-// Swift (5.9+)
+// Swift
 let x = 5
 let y = 10
 let description = if x + y > 10 {

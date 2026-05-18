@@ -473,7 +473,7 @@ The most significant conceptual difference is scope. A Swift protocol defines a 
 - **Copy semantics at boundaries**: all data crossing a component boundary is copied through the Canonical ABI. There are no shared references between components. For large data transfers, this copying has a real cost. Design your interfaces to minimize cross-boundary data movement for performance-sensitive workloads.
 - **Resources have overhead**: each `resource` handle involves a table lookup in the host. For fine-grained operations on many resources, the overhead can add up. Prefer batch operations when possible.
 - **The standards and tooling are still evolving**: some runtimes and workflows are usable today, but WIT, resources, async support, and surrounding tools continue to change. Pin your tooling versions and test thoroughly when upgrading.
-- **String encoding**: WIT strings are always UTF-8. This matches Rust's `String` type. Swift's `String` is also Unicode-correct and has used UTF-8 as its native encoding since Swift 5, so the conversion is transparent when going through binding generators.
+- **String encoding**: WIT strings are always UTF-8. This matches Rust's `String` type. Swift's `String` is also Unicode-correct and uses UTF-8 as its native encoding, so the conversion is transparent when going through binding generators.
 - **Error handling**: WIT's `result<T, E>` maps directly to Rust's `Result<T, E>`. There is no equivalent of Swift's `throws` sugar – you work with the result type explicitly.
 
 ## Further reading

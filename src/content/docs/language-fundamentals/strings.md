@@ -76,7 +76,7 @@ This is similar to how a Swift function might accept `some StringProtocol` for r
 
 ## UTF-8 encoding
 
-Rust strings are always valid UTF-8. Swift's `String` also uses UTF-8 as its internal storage (since Swift 5), so the two languages are aligned on encoding. However, the APIs they expose on top of that encoding differ.
+Rust strings are always valid UTF-8. Swift's `String` also uses UTF-8 as its internal storage, so the two languages are aligned on encoding. However, the APIs they expose on top of that encoding differ.
 
 In Swift, you access different views of a string's contents:
 
