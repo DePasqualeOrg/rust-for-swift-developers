@@ -1,0 +1,57 @@
+---
+// Starlight's "On this page" dropdown with animated opening and closing. Starlight opens and closes
+// it by setting `details.open`, which shows or hides the content at once, so the property is
+// wrapped to animate the dropdown. Safari does not run CSS starting styles for content revealed
+// by `<details>`, so the opening is scripted too.
+import Default from '@astrojs/starlight/components/MobileTableOfContents.astro';
+---
+
+<Default />
+
+<script>
+	import {
+		menuCloseKeyframes,
+		menuCloseTiming,
+		menuOpenTiming,
+		reduceMotion,
+	} from '../scripts/motion';
+
+	const details = document.querySelector<HTMLDetailsElement>('#starlight__mobile-toc');
+	const dropdown = details?.querySelector<HTMLElement>('.dropdown');
+	const open = Object.getOwnPropertyDescriptor(HTMLDetailsElement.prototype, 'open');
+	if (details && dropdown && open?.get && open.set) {
+		const isOpen = () => open.get!.call(details) as boolean;
+		const setOpen = (value: boolean) => open.set!.call(details, value);
+		let closing: Animation | undefined;
+
+		Object.defineProperty(details, 'open', {
+			configurable: true,
+			get: isOpen,
+			set(value: boolean) {
+				if (value || !isOpen() || reduceMotion.matches) {
+					const opening = value && !isOpen();
+					closing?.cancel();
+					closing = undefined;
+					setOpen(value);
+					if (opening && !reduceMotion.matches) {
+						dropdown.animate([...menuCloseKeyframes].reverse(), menuOpenTiming);
+					}
+					return;
+				}
+				if (closing) return;
+				closing = dropdown.animate(menuCloseKeyframes, menuCloseTiming);
+				closing.finished.then(() => {
+					setOpen(false);
+					closing?.cancel();
+					closing = undefined;
+				});
+			},
+		});
+
+		// Route the summary's own toggling through the animated property as well.
+		details.querySelector('summary')?.addEventListener('click', (event) => {
+			event.preventDefault();
+			details.open = !isOpen() || closing !== undefined;
+		});
+	}
+</script>

@@ -1,0 +1,37 @@
+---
+// Starlight's search with an animated close. The dialog opens with a CSS transition, but Safari
+// cannot animate a dialog leaving the top layer, so closing fades it out from script first.
+import Default from '@astrojs/starlight/components/Search.astro';
+---
+
+<Default />
+
+<script>
+	import { menuCloseKeyframes, menuCloseTiming, reduceMotion } from '../scripts/motion';
+
+	const dialog = document.querySelector<HTMLDialogElement>('site-search dialog');
+	if (dialog) {
+		const close = dialog.close.bind(dialog);
+		let closing = false;
+		// Starlight closes the dialog through `close()` from several places, so wrap the method.
+		dialog.close = (returnValue?: string) => {
+			if (!dialog.open || reduceMotion.matches) return close(returnValue);
+			if (closing) return;
+			closing = true;
+			const animations = [
+				dialog.animate(menuCloseKeyframes, menuCloseTiming),
+				dialog.animate({ opacity: [1, 0] }, { ...menuCloseTiming, pseudoElement: '::backdrop' }),
+			];
+			Promise.all(animations.map((animation) => animation.finished)).then(() => {
+				close(returnValue);
+				animations.forEach((animation) => animation.cancel());
+				closing = false;
+			});
+		};
+		// Escape closes a modal dialog directly; route it through the animated close.
+		dialog.addEventListener('cancel', (event) => {
+			event.preventDefault();
+			dialog.close();
+		});
+	}
+</script>

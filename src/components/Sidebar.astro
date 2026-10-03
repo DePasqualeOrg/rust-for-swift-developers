@@ -1,0 +1,62 @@
+---
+// Starlight's sidebar with animated group expansion and an animated close for the narrow-viewport
+// menu. Safari can neither transition a `<details>` element to its natural height nor animate an
+// element leaving the top layer, so both are animated from script.
+import Default from '@astrojs/starlight/components/Sidebar.astro';
+---
+
+<Default />
+
+<script>
+	import { reduceMotion, sidebarTiming } from '../scripts/motion';
+
+	for (const details of document.querySelectorAll<HTMLDetailsElement>('#starlight__sidebar details')) {
+		const summary = details.querySelector<HTMLElement>(':scope > summary');
+		if (!summary) continue;
+		let expanded = details.open;
+		let animation: Animation | undefined;
+
+		summary.addEventListener('click', (event) => {
+			if (reduceMotion.matches) return;
+			event.preventDefault();
+			expanded = !expanded;
+			// Starlight records the group's state from `details.open` while this click bubbles, so
+			// change it only after the event has finished dispatching.
+			queueMicrotask(() => {
+				const from = details.offsetHeight;
+				animation?.cancel();
+				details.open = true;
+				details.toggleAttribute('data-collapsing', !expanded);
+				const to = expanded ? details.offsetHeight : summary.offsetHeight;
+				details.style.overflow = 'hidden';
+				animation = details.animate({ height: [`${from}px`, `${to}px`] }, sidebarTiming);
+				animation.onfinish = () => {
+					details.open = expanded;
+					details.removeAttribute('data-collapsing');
+					details.style.overflow = '';
+					animation = undefined;
+				};
+			});
+		});
+	}
+
+	const pane = document.getElementById('starlight__sidebar');
+	const menuButton = document.querySelector('button[popovertarget="starlight__sidebar"]');
+	let closing = false;
+	menuButton?.addEventListener('click', (event) => {
+		if (!pane?.matches(':popover-open') || reduceMotion.matches) return;
+		// Cancelling the click stops the button from hiding the popover before the slide-out.
+		event.preventDefault();
+		if (closing) return;
+		closing = true;
+		const slide = pane.animate(
+			{ transform: ['none', 'translateX(-100%)'] },
+			{ ...sidebarTiming, fill: 'forwards' }
+		);
+		slide.finished.then(() => {
+			pane.hidePopover();
+			slide.cancel();
+			closing = false;
+		});
+	});
+</script>

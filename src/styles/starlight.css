@@ -74,14 +74,97 @@
   }
 }
 
-/* Hidden sidebar on wide viewports: the content takes the full width. */
+/*
+  Hidden sidebar on wide viewports: the content takes the full width. The content inset is a
+  registered length so it can transition, which moves the header, content and sidebar together.
+*/
+@property --sl-content-inline-start {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0rem;
+}
+
+:root {
+  --ease-sidebar: cubic-bezier(0.32, 0.72, 0, 1);
+  --duration-sidebar: 0.35s;
+}
+
 @media (min-width: 50rem) {
   :root[data-has-sidebar][data-sidebar-collapsed] {
     --sl-content-inline-start: 0rem;
   }
 
   :root[data-sidebar-collapsed] #starlight__sidebar {
-    display: none;
+    transform: translateX(-100%);
+    visibility: hidden;
+  }
+}
+
+@media (min-width: 50rem) and (prefers-reduced-motion: no-preference) {
+  :root {
+    transition: --sl-content-inline-start var(--duration-sidebar) var(--ease-sidebar);
+  }
+
+  #starlight__sidebar {
+    transition:
+      transform var(--duration-sidebar) var(--ease-sidebar),
+      visibility 0s;
+  }
+
+  :root[data-sidebar-collapsed] #starlight__sidebar {
+    transition:
+      transform var(--duration-sidebar) var(--ease-sidebar),
+      visibility 0s var(--duration-sidebar);
+  }
+}
+
+/* The menu on narrow viewports slides in from the leading edge; its close is scripted. */
+@media (width < 50rem) and (prefers-reduced-motion: no-preference) {
+  #starlight__sidebar {
+    transform: translateX(-100%);
+    transition: transform var(--duration-sidebar) var(--ease-sidebar);
+  }
+
+  #starlight__sidebar:popover-open {
+    transform: none;
+  }
+
+  @starting-style {
+    #starlight__sidebar:popover-open {
+      transform: translateX(-100%);
+    }
+  }
+}
+
+/*
+  The search dialog fades in from its anchor. Its closing animation, and both animations of the
+  "On this page" dropdown, run from script; see `src/components`.
+*/
+@media (prefers-reduced-motion: no-preference) {
+  site-search dialog,
+  #starlight__mobile-toc .dropdown {
+    transform-origin: top center;
+  }
+
+  site-search dialog {
+    transition:
+      opacity 0.18s ease-out,
+      transform 0.18s ease-out;
+  }
+
+  site-search dialog::backdrop {
+    transition: opacity 0.18s ease-out;
+  }
+
+  @starting-style {
+    site-search dialog[open] {
+      opacity: 0;
+      transform: scale(0.98);
+    }
+
+    site-search dialog[open]::backdrop {
+      opacity: 0;
+    }
   }
 }
 
@@ -170,6 +253,11 @@
 
 .sidebar-content .caret {
   color: var(--sl-color-gray-4);
+}
+
+/* A collapsing group stays open until its animation ends; turn the caret right away. */
+.sidebar-content details[data-collapsing] > summary .caret {
+  transform: none;
 }
 
 /* Table of contents */
@@ -344,58 +432,15 @@ h1#_top {
 
 /*
   Cross-page view transitions. Each sidebar link is a full page load, which Safari can show as a
-  flash. With a view transition the browser holds the old page until the new one is ready, keeps
-  the header and sidebar in place, and fades the old content out while the new content rises in.
-  With Reduce Motion the rise is dropped and only the crossfade remains.
+  flash. A view transition holds the old page until the new one is ready; the swap itself is
+  instant.
 */
 @view-transition {
   navigation: auto;
 }
 
-.page > .header {
-  view-transition-name: site-header;
-}
-
-#starlight__sidebar {
-  view-transition-name: site-sidebar;
-}
-
-::view-transition-old(site-header),
-::view-transition-new(site-header),
-::view-transition-old(site-sidebar),
-::view-transition-new(site-sidebar) {
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
   animation: none;
-}
-
-::view-transition-old(root) {
-  animation: 0.16s ease-in both page-fade-out;
-}
-
-::view-transition-new(root) {
-  animation: 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) 0.06s both page-rise-in;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-new(root) {
-    animation: 0.25s ease-out 0.05s both page-fade-in;
-  }
-}
-
-@keyframes page-fade-out {
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes page-fade-in {
-  from {
-    opacity: 0;
-  }
-}
-
-@keyframes page-rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(0.75rem);
-  }
 }

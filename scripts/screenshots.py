@@ -68,7 +68,7 @@ def check_sidebar_toggle(p, browser, base):
 
 
 def check_view_transitions(browser, base):
-    """Sidebar navigation runs a cross-document view transition, with or without Reduce Motion."""
+    """Sidebar navigation runs a cross-document view transition, which keeps Safari from flashing."""
     for reduced_motion in ("no-preference", "reduce"):
         context = browser.new_context(
             viewport={"width": 1440, "height": 900}, reduced_motion=reduced_motion
@@ -85,6 +85,46 @@ def check_view_transitions(browser, base):
     log("view transition check passed")
 
 
+def check_menus(p, browser, base):
+    """Menus with scripted animations still end up open or closed as Starlight expects."""
+    options = dict(p.devices["iPhone 15"])
+    options.pop("default_browser_type", None)
+    context = browser.new_context(**options)
+    page = context.new_page()
+    errors = []
+    page.on("pageerror", lambda error: errors.append(str(error)))
+    page.goto(base + PAGES["chapter"])
+
+    toc = "#starlight__mobile-toc"
+    page.click(f"{toc} summary")
+    page.wait_for_function(f"document.querySelector('{toc}').open")
+    page.click(f"{toc} summary")
+    page.wait_for_function(f"!document.querySelector('{toc}').open")
+    page.click(f"{toc} summary")
+    page.locator(f"{toc} .dropdown a").nth(1).click()
+    page.wait_for_function(f"!document.querySelector('{toc}').open")
+
+    menu = "#starlight__sidebar"
+    button = "button[popovertarget='starlight__sidebar']"
+    page.click(button)
+    page.wait_for_function(f"document.querySelector('{menu}').matches(':popover-open')")
+    page.click(button)
+    page.wait_for_function(f"!document.querySelector('{menu}').matches(':popover-open')")
+    assert not page.locator(menu).is_visible(), "menu should be hidden after closing"
+
+    page.click("button[data-open-modal]")
+    page.wait_for_function("document.querySelector('site-search dialog').open")
+    page.keyboard.press("Escape")
+    # Starlight releases the page's scroll lock from the dialog's `close` event.
+    page.wait_for_function(
+        "!document.querySelector('site-search dialog').open"
+        " && !document.body.hasAttribute('data-search-modal-open')"
+    )
+    assert not errors, errors
+    context.close()
+    log("menu check passed")
+
+
 def main():
     only = set(sys.argv[1:])
     base = serve()
@@ -92,6 +132,7 @@ def main():
         browser = p.webkit.launch()
         check_sidebar_toggle(p, browser, base)
         check_view_transitions(browser, base)
+        check_menus(p, browser, base)
         for name, device in VIEWPORTS.items():
             if only and name not in only:
                 continue

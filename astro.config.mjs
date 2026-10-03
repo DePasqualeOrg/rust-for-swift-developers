@@ -43,6 +43,9 @@ export default defineConfig({
       logo: { src: './src/assets/logo.svg' },
       customCss: ['./src/styles/starlight.css'],
       components: {
+        MobileTableOfContents: './src/components/MobileTableOfContents.astro',
+        Search: './src/components/Search.astro',
+        Sidebar: './src/components/Sidebar.astro',
         SiteTitle: './src/components/SiteTitle.astro',
       },
       head: [
