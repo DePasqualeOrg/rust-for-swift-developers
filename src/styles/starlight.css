@@ -75,46 +75,78 @@
 }
 
 /*
-  Hidden sidebar on wide viewports: the content takes the full width. The content inset is a
-  registered length so it can transition, which moves the header, content and sidebar together.
+  Sidebar on wide viewports. With a pointer it docks beside the content and can be hidden, which
+  gives the content the full width; the change is animated as one view transition (below). On a
+  touch screen it never docks: the toggle slides it over the content above a dimmed backdrop, so
+  the text never reflows, as in iPadOS apps. The state attributes are set by `SiteTitle.astro`.
 */
-@property --sl-content-inline-start {
-  syntax: '<length>';
-  inherits: true;
-  initial-value: 0rem;
-}
-
 :root {
   --ease-sidebar: cubic-bezier(0.32, 0.72, 0, 1);
   --duration-sidebar: 0.35s;
+}
+
+.sidebar-scrim {
+  display: none;
 }
 
 @media (min-width: 50rem) {
   :root[data-has-sidebar][data-sidebar-collapsed] {
     --sl-content-inline-start: 0rem;
   }
+}
 
+@media (min-width: 50rem) and (not (pointer: coarse)) {
   :root[data-sidebar-collapsed] #starlight__sidebar {
-    transform: translateX(-100%);
-    visibility: hidden;
+    display: none;
   }
 }
 
-@media (min-width: 50rem) and (prefers-reduced-motion: no-preference) {
-  :root {
-    transition: --sl-content-inline-start var(--duration-sidebar) var(--ease-sidebar);
+@media (min-width: 50rem) and (pointer: coarse) {
+  #starlight__sidebar {
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition:
+      transform var(--duration-sidebar) var(--ease-sidebar),
+      visibility 0s var(--duration-sidebar);
   }
 
-  #starlight__sidebar {
+  :root[data-sidebar-open] #starlight__sidebar {
+    transform: none;
+    visibility: visible;
+    box-shadow: var(--sl-shadow-lg);
     transition:
       transform var(--duration-sidebar) var(--ease-sidebar),
       visibility 0s;
   }
 
-  :root[data-sidebar-collapsed] #starlight__sidebar {
+  .sidebar-scrim {
+    display: block;
+    position: fixed;
+    inset: var(--sl-nav-height) 0 0;
+    z-index: var(--sl-z-index-toc);
+    background-color: var(--sl-color-backdrop-overlay);
+    opacity: 0;
+    visibility: hidden;
     transition:
-      transform var(--duration-sidebar) var(--ease-sidebar),
+      opacity var(--duration-sidebar) var(--ease-sidebar),
       visibility 0s var(--duration-sidebar);
+  }
+
+  :root[data-sidebar-open] .sidebar-scrim {
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity var(--duration-sidebar) var(--ease-sidebar),
+      visibility 0s;
+  }
+}
+
+@media (min-width: 50rem) and (pointer: coarse) and (prefers-reduced-motion: reduce) {
+  #starlight__sidebar,
+  :root[data-sidebar-open] #starlight__sidebar,
+  .sidebar-scrim,
+  :root[data-sidebar-open] .sidebar-scrim {
+    transition: none;
   }
 }
 
@@ -253,6 +285,7 @@
 
 .sidebar-content .caret {
   color: var(--sl-color-gray-4);
+  transition: transform var(--duration-sidebar) var(--ease-sidebar);
 }
 
 /* A collapsing group stays open until its animation ends; turn the caret right away. */
@@ -431,16 +464,103 @@ h1#_top {
 }
 
 /*
-  Cross-page view transitions. Each sidebar link is a full page load, which Safari can show as a
-  flash. A view transition holds the old page until the new one is ready; the swap itself is
-  instant.
+  View transitions. Across pages, the browser holds the old page until the new one is ready and
+  then crossfades the content, while the header and sidebar switch in place; without this, Safari
+  can flash between pages. When the docked sidebar is hidden or shown, `SiteTitle.astro` runs a
+  same-document transition with `data-sidebar-animating` set: the sidebar slides, and the text,
+  table of contents and search box slide to their new places on the same timeline. Nothing fades
+  then, since their content does not change.
 */
 @view-transition {
   navigation: auto;
 }
 
-::view-transition-group(*),
-::view-transition-old(*),
-::view-transition-new(*) {
+.page > .header {
+  view-transition-name: site-header;
+}
+
+/* A sidebar that overlays the content fades with the page instead, since the next page closes it. */
+@media (min-width: 50rem) and (not (pointer: coarse)) {
+  #starlight__sidebar {
+    view-transition-name: site-sidebar;
+  }
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.2s;
+}
+
+::view-transition-old(site-header),
+::view-transition-old(site-sidebar) {
   animation: none;
+  opacity: 0;
+}
+
+::view-transition-group(site-header),
+::view-transition-new(site-header),
+::view-transition-group(site-sidebar),
+::view-transition-new(site-sidebar) {
+  animation: none;
+}
+
+:root[data-sidebar-animating] main > .content-panel:first-child > .sl-container {
+  view-transition-name: page-title;
+}
+
+:root[data-sidebar-animating] main > .content-panel:last-child > .sl-container {
+  view-transition-name: page-body;
+}
+
+:root[data-sidebar-animating] .right-sidebar {
+  view-transition-name: page-toc-frame;
+}
+
+:root[data-sidebar-animating] .right-sidebar .sl-container {
+  view-transition-name: page-toc;
+}
+
+:root[data-sidebar-animating] mobile-starlight-toc > nav {
+  view-transition-name: page-toc-bar;
+}
+
+:root[data-sidebar-animating] site-search > button[data-open-modal] {
+  view-transition-name: site-search;
+}
+
+:root[data-sidebar-animating]::view-transition-group(*) {
+  animation-duration: var(--duration-sidebar);
+  animation-timing-function: var(--ease-sidebar);
+}
+
+/* Show each element as it ends up, at its natural size, while its group moves it into place. */
+:root[data-sidebar-animating]::view-transition-old(*) {
+  animation: none;
+  opacity: 0;
+}
+
+:root[data-sidebar-animating]::view-transition-new(*) {
+  inline-size: auto;
+  animation: none;
+}
+
+:root[data-sidebar-animating]::view-transition-old(site-sidebar) {
+  opacity: 1;
+  animation: var(--duration-sidebar) var(--ease-sidebar) both sidebar-slide-out;
+}
+
+:root[data-sidebar-animating]::view-transition-new(site-sidebar) {
+  animation: var(--duration-sidebar) var(--ease-sidebar) both sidebar-slide-in;
+}
+
+@keyframes sidebar-slide-out {
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes sidebar-slide-in {
+  from {
+    transform: translateX(-100%);
+  }
 }

@@ -51,15 +51,14 @@ export default defineConfig({
       head: [
         {
           // Decide whether the docked sidebar starts hidden before the page renders, so the
-          // layout never shifts. An explicit choice from the sidebar toggle wins; otherwise the
-          // sidebar starts hidden on touch devices and narrow windows, where it crowds the text.
+          // layout never shifts. Touch screens never dock it: it slides over the content instead.
+          // Otherwise the choice from the sidebar toggle wins, and narrow windows start without it.
           tag: 'script',
           content: `(() => {
             let stored = null;
             try { stored = localStorage.getItem('sidebar'); } catch {}
-            const collapsed = stored
-              ? stored === 'collapsed'
-              : matchMedia('(pointer: coarse), (max-width: 64rem)').matches;
+            const collapsed = matchMedia('(pointer: coarse)').matches
+              || (stored ? stored === 'collapsed' : matchMedia('(max-width: 64rem)').matches);
             if (collapsed) document.documentElement.setAttribute('data-sidebar-collapsed', '');
           })();`,
         },

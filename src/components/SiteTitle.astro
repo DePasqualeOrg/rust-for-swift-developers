@@ -1,8 +1,9 @@
 ---
-// Adds a sidebar toggle in front of Starlight's site title. On viewports wide enough for the
-// docked sidebar, the toggle hides it so the content can use the full width; narrower viewports
-// keep Starlight's menu button. The initial state is set by the inline script in
-// `astro.config.mjs` before the page renders, so the layout never shifts after load.
+// Adds a sidebar toggle in front of Starlight's site title on viewports wide enough for the
+// docked sidebar; narrower viewports keep Starlight's menu button. With a pointer, the toggle
+// hides the docked sidebar so the content can use the full width, and the choice is remembered.
+// On a touch screen the sidebar starts hidden and the toggle slides it over the content. The
+// initial state is set by the inline script in `astro.config.mjs` before the page renders.
 import Default from '@astrojs/starlight/components/SiteTitle.astro';
 
 const { hasSidebar } = Astro.locals.starlightRoute;
@@ -40,23 +41,58 @@ const { hasSidebar } = Astro.locals.starlightRoute;
 </div>
 
 <script>
+	import { reduceMotion } from '../scripts/motion';
+
+	const touch = matchMedia('(pointer: coarse)');
+	const wide = matchMedia('(min-width: 50rem)');
+
 	class SidebarToggle extends HTMLElement {
 		connectedCallback() {
 			const button = this.querySelector('button');
 			if (!button) return;
 			const root = document.documentElement;
+			const main = document.querySelector<HTMLElement>('.main-frame');
+			const shown = () =>
+				touch.matches ? root.hasAttribute('data-sidebar-open') : !root.hasAttribute('data-sidebar-collapsed');
 			const sync = () => {
-				const collapsed = root.hasAttribute('data-sidebar-collapsed');
-				button.setAttribute('aria-expanded', String(!collapsed));
-				button.title = collapsed ? 'Show sidebar' : 'Hide sidebar';
+				button.setAttribute('aria-expanded', String(shown()));
+				button.title = shown() ? 'Hide sidebar' : 'Show sidebar';
 			};
-			sync();
-			button.addEventListener('click', () => {
-				const collapsed = root.toggleAttribute('data-sidebar-collapsed');
+
+			// On a touch screen the sidebar slides over the content and is not remembered.
+			const setOverlay = (open: boolean) => {
+				root.toggleAttribute('data-sidebar-open', open);
+				main?.toggleAttribute('inert', open);
+				sync();
+			};
+			const scrim = document.createElement('div');
+			scrim.className = 'sidebar-scrim';
+			scrim.addEventListener('click', () => setOverlay(false));
+			document.body.append(scrim);
+			document.addEventListener('keydown', (event) => {
+				if (event.key !== 'Escape' || !root.hasAttribute('data-sidebar-open')) return;
+				setOverlay(false);
+				button.focus();
+			});
+			wide.addEventListener('change', () => setOverlay(false));
+
+			// With a pointer the sidebar docks; hiding it moves the content, so animate both together.
+			const setDocked = (collapsed: boolean) => {
+				root.toggleAttribute('data-sidebar-collapsed', collapsed);
 				try {
 					localStorage.setItem('sidebar', collapsed ? 'collapsed' : 'expanded');
 				} catch {}
 				sync();
+			};
+
+			sync();
+			button.addEventListener('click', () => {
+				if (touch.matches) return setOverlay(!root.hasAttribute('data-sidebar-open'));
+				const collapsed = !root.hasAttribute('data-sidebar-collapsed');
+				if (reduceMotion.matches || !document.startViewTransition) return setDocked(collapsed);
+				root.setAttribute('data-sidebar-animating', '');
+				const transition = document.startViewTransition(() => setDocked(collapsed));
+				transition.finished.finally(() => root.removeAttribute('data-sidebar-animating'));
 			});
 		}
 	}

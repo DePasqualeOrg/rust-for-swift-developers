@@ -40,8 +40,15 @@ def serve():
     return f"http://127.0.0.1:{server.server_address[1]}"
 
 
-def check_sidebar_toggle(p, browser, base):
-    """The toggle hides and shows the docked sidebar, and the choice survives navigation."""
+# WebKit keeps listing a view transition's finished animations, so only running ones count.
+SETTLED = (
+    "!document.documentElement.hasAttribute('data-sidebar-animating')"
+    " && !document.getAnimations().some(a => a.playState === 'running')"
+)
+
+
+def check_sidebar_overlay(p, browser, base):
+    """On a touch screen the toggle slides the sidebar over the content and anything else closes it."""
     options = dict(p.devices["iPad Pro 11 landscape"])
     options.pop("default_browser_type", None)
     context = browser.new_context(**options)
@@ -51,20 +58,59 @@ def check_sidebar_toggle(p, browser, base):
     page.goto(base + PAGES["chapter"])
     sidebar = page.locator("#starlight__sidebar")
     toggle = page.locator("sidebar-toggle button")
+    content = "document.querySelector('.main-pane').getBoundingClientRect().left"
+    left = page.evaluate(content)
     assert not sidebar.is_visible(), "sidebar should start hidden on a touch device"
+    for close in ("scrim", "escape", "toggle"):
+        toggle.click()
+        page.wait_for_function(SETTLED)
+        assert sidebar.is_visible(), "toggle should show the sidebar"
+        assert toggle.get_attribute("aria-expanded") == "true"
+        assert page.evaluate(content) == left, "the overlay should not move the content"
+        if close == "scrim":
+            page.locator(".sidebar-scrim").click(position={"x": 900, "y": 300})
+        elif close == "escape":
+            page.keyboard.press("Escape")
+        else:
+            toggle.click()
+        page.wait_for_function(SETTLED)
+        assert not sidebar.is_visible(), f"{close} should hide the sidebar"
+        assert toggle.get_attribute("aria-expanded") == "false"
     toggle.click()
-    assert sidebar.is_visible(), "toggle should show the sidebar"
-    assert toggle.get_attribute("aria-expanded") == "true"
     sidebar.locator("li:has(> a[aria-current='page']) + li > a").click()
     page.wait_for_load_state()
     assert page.url != base + PAGES["chapter"], "sidebar link should navigate"
-    assert sidebar.is_visible(), "shown sidebar should stay shown after navigation"
-    toggle.click()
-    page.reload()
-    assert not sidebar.is_visible(), "hidden sidebar should stay hidden after reload"
+    assert not sidebar.is_visible(), "the next page should start with the sidebar hidden"
     assert not errors, errors
     context.close()
-    log("sidebar toggle check passed")
+    log("sidebar overlay check passed")
+
+
+def check_sidebar_docked(browser, base):
+    """With a pointer the toggle hides the docked sidebar, widening the content, and remembers that."""
+    for reduced_motion in ("no-preference", "reduce"):
+        context = browser.new_context(viewport={"width": 1440, "height": 900}, reduced_motion=reduced_motion)
+        page = context.new_page()
+        errors = []
+        page.on("pageerror", lambda error: errors.append(str(error)))
+        page.goto(base + PAGES["chapter"])
+        sidebar = page.locator("#starlight__sidebar")
+        toggle = page.locator("sidebar-toggle button")
+        content = "document.querySelector('.main-pane').getBoundingClientRect().left"
+        left = page.evaluate(content)
+        assert sidebar.is_visible(), "sidebar should start shown in a wide window"
+        toggle.click()
+        page.wait_for_function(SETTLED)
+        assert not sidebar.is_visible(), "toggle should hide the sidebar"
+        assert page.evaluate(content) < left, "hiding the sidebar should widen the content"
+        page.reload()
+        assert not sidebar.is_visible(), "hidden sidebar should stay hidden after reload"
+        toggle.click()
+        page.wait_for_function(SETTLED)
+        assert sidebar.is_visible() and page.evaluate(content) == left
+        assert not errors, errors
+        context.close()
+    log("docked sidebar check passed")
 
 
 def check_view_transitions(browser, base):
@@ -130,7 +176,8 @@ def main():
     base = serve()
     with sync_playwright() as p:
         browser = p.webkit.launch()
-        check_sidebar_toggle(p, browser, base)
+        check_sidebar_overlay(p, browser, base)
+        check_sidebar_docked(browser, base)
         check_view_transitions(browser, base)
         check_menus(p, browser, base)
         for name, device in VIEWPORTS.items():
@@ -148,12 +195,11 @@ def main():
                     page.screenshot(path=os.path.join(OUT, stem + ".png"))
                     toggle = page.locator("sidebar-toggle button")
                     if page_name == "chapter" and toggle.is_visible():
-                        state = "document.documentElement.hasAttribute('data-sidebar-collapsed')"
-                        before = page.evaluate(state)
                         toggle.click()
-                        page.wait_for_function(f"{state} !== {str(before).lower()}")
+                        page.wait_for_function(SETTLED)
                         page.screenshot(path=os.path.join(OUT, stem + "-toggled.png"))
                         toggle.click()
+                        page.wait_for_function(SETTLED)
                     if page_name == "chapter" and name == "phone":
                         page.locator("button[popovertarget='starlight__sidebar']").click()
                         page.wait_for_selector("#starlight__sidebar:popover-open")
