@@ -345,7 +345,8 @@ h1#_top {
 /*
   Cross-page view transitions. Each sidebar link is a full page load, which Safari can show as a
   flash. With a view transition the browser holds the old page until the new one is ready, keeps
-  the header and sidebar in place and fades only the content.
+  the header and sidebar in place, and fades the old content out while the new content rises in.
+  With Reduce Motion the rise is dropped and only the crossfade remains.
 */
 @view-transition {
   navigation: auto;
@@ -359,11 +360,6 @@ h1#_top {
   view-transition-name: site-sidebar;
 }
 
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: 0.18s;
-}
-
 ::view-transition-old(site-header),
 ::view-transition-new(site-header),
 ::view-transition-old(site-sidebar),
@@ -371,8 +367,35 @@ h1#_top {
   animation: none;
 }
 
+::view-transition-old(root) {
+  animation: 0.16s ease-in both page-fade-out;
+}
+
+::view-transition-new(root) {
+  animation: 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) 0.06s both page-rise-in;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  @view-transition {
-    navigation: none;
+  ::view-transition-new(root) {
+    animation: 0.25s ease-out 0.05s both page-fade-in;
+  }
+}
+
+@keyframes page-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes page-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
   }
 }

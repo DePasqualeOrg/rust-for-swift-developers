@@ -67,12 +67,31 @@ def check_sidebar_toggle(p, browser, base):
     log("sidebar toggle check passed")
 
 
+def check_view_transitions(browser, base):
+    """Sidebar navigation runs a cross-document view transition, with or without Reduce Motion."""
+    for reduced_motion in ("no-preference", "reduce"):
+        context = browser.new_context(
+            viewport={"width": 1440, "height": 900}, reduced_motion=reduced_motion
+        )
+        context.add_init_script(
+            "addEventListener('pagereveal', e => { window.revealedWithTransition = !!e.viewTransition; });"
+        )
+        page = context.new_page()
+        page.goto(base + PAGES["chapter"])
+        page.locator("#starlight__sidebar li:has(> a[aria-current='page']) + li > a").click()
+        page.wait_for_function("window.revealedWithTransition !== undefined")
+        assert page.evaluate("window.revealedWithTransition"), f"no view transition ({reduced_motion})"
+        context.close()
+    log("view transition check passed")
+
+
 def main():
     only = set(sys.argv[1:])
     base = serve()
     with sync_playwright() as p:
         browser = p.webkit.launch()
         check_sidebar_toggle(p, browser, base)
+        check_view_transitions(browser, base)
         for name, device in VIEWPORTS.items():
             if only and name not in only:
                 continue
