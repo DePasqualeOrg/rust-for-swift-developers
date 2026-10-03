@@ -13,9 +13,8 @@
     "update:npm-packages": "ncu --target minor -u && ncu --interactive --format group"
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.39",
-    "astro": "^6.3",
-    "sharp": "^0.34",
-    "starlight-theme-nova": "^0.11.10"
+    "@astrojs/starlight": "^0.42",
+    "astro": "^7.3",
+    "sharp": "^0.34"
   }
 }

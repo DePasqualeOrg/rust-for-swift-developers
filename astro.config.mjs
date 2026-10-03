@@ -1,6 +1,5 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
-import starlightThemeNova from 'starlight-theme-nova';
 
 const githubOwner =
   process.env.GITHUB_REPOSITORY_OWNER ?? process.env.GITHUB_REPOSITORY?.split('/')[0];
@@ -41,8 +40,43 @@ export default defineConfig({
     starlight({
       title: 'Rust for Swift Developers',
       disable404Route: true,
+      logo: { src: './src/assets/logo.svg' },
       customCss: ['./src/styles/starlight.css'],
-      plugins: [starlightThemeNova()],
+      components: {
+        SiteTitle: './src/components/SiteTitle.astro',
+      },
+      head: [
+        {
+          // Decide whether the docked sidebar starts hidden before the page renders, so the
+          // layout never shifts. An explicit choice from the sidebar toggle wins; otherwise the
+          // sidebar starts hidden on touch devices and narrow windows, where it crowds the text.
+          tag: 'script',
+          content: `(() => {
+            let stored = null;
+            try { stored = localStorage.getItem('sidebar'); } catch {}
+            const collapsed = stored
+              ? stored === 'collapsed'
+              : matchMedia('(pointer: coarse), (max-width: 64rem)').matches;
+            if (collapsed) document.documentElement.setAttribute('data-sidebar-collapsed', '');
+          })();`,
+        },
+      ],
+      expressiveCode: {
+        themes: ['vitesse-dark', 'vitesse-light'],
+        useStarlightUiThemeColors: true,
+        styleOverrides: {
+          borderRadius: '0.625rem',
+          borderColor: 'var(--sl-color-hairline-light)',
+          codeFontSize: '0.875rem',
+          codeLineHeight: '1.65',
+          codePaddingBlock: '0.875rem',
+          codePaddingInline: '1.125rem',
+          frames: {
+            shadowColor: 'transparent',
+            editorActiveTabIndicatorTopColor: 'var(--sl-color-accent)',
+          },
+        },
+      },
       social: [{ icon: 'github', label: 'GitHub', href: repositoryUrl }],
       sidebar: [
         {

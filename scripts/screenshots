@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Render the built site in WebKit at phone, iPad and desktop sizes, in light and dark mode,
+# and write PNGs to the given directory (default: .screenshots/). Build first with
+# `scripts/dx pnpm build`. Runs in a disposable Playwright container so no browser or
+# Python package runs on the host.
+#
+#   scripts/screenshots [out-dir] [viewport...]
+#
+# Viewports: phone, ipad-portrait, ipad-landscape, desktop (default: all).
+set -euo pipefail
+cd "$(dirname "$0")/.."
+# The Python package version must match the browsers bundled in the image.
+version=1.63.0
+image=mcr.microsoft.com/playwright/python:v$version-noble
+out=${1:-.screenshots}
+shift || true
+[ -f dist/index.html ] || { echo "dist/ is missing; run scripts/dx pnpm build first" >&2; exit 1; }
+mkdir -p "$out"
+exec docker run --rm --init --ipc=host \
+	-v "$PWD/dist:/site:ro" \
+	-v "$PWD/scripts/screenshots.py:/screenshots.py:ro" \
+	-v "$(cd "$out" && pwd):/out" \
+	"$image" sh -c 'pip install -q --break-system-packages --root-user-action=ignore "playwright==$0" >&2 && exec python3 /screenshots.py "$@"' "$version" "$@"
