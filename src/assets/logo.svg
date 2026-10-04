@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <title>Rust for Swift Developers</title>
-  <rect width="64" height="64" rx="15" fill="#1c2129"/>
-  <rect x="0.5" y="0.5" width="63" height="63" rx="14.5" fill="none" stroke="#fff" stroke-opacity="0.12"/>
-  <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="5.5">
-    <path d="M18 19l13 13-13 13" stroke="#fff"/>
-    <path d="M34 19l13 13-13 13" stroke="#4d8ef7"/>
-  </g>
-</svg>

@@ -1,5 +1,5 @@
 /*
-  Site theme: cool neutrals with the blue accent from the logo, reading-sized type, a sidebar
+  Site theme: cool neutrals with a blue accent, reading-sized type, a sidebar
   that can be hidden on wide viewports, and cross-page view transitions.
 */
 
@@ -202,16 +202,10 @@
 
 /* Header */
 .site-title {
-  gap: 0.625rem;
   font-size: 1.0625rem;
   font-weight: 650;
   letter-spacing: -0.01em;
   color: var(--sl-color-white);
-}
-
-.site-title img {
-  height: 1.875rem;
-  border-radius: 0.4375rem;
 }
 
 /* Menu button on narrow viewports: flat, like the search button beside it. */

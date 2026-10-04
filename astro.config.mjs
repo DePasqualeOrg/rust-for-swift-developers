@@ -40,7 +40,6 @@ export default defineConfig({
     starlight({
       title: 'Rust for Swift Developers',
       disable404Route: true,
-      logo: { src: './src/assets/logo.svg' },
       customCss: ['./src/styles/starlight.css'],
       components: {
         MobileTableOfContents: './src/components/MobileTableOfContents.astro',
