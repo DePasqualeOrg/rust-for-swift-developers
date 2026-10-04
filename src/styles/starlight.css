@@ -1,30 +1,30 @@
 /*
-  Site theme: warm neutrals with the rust accent from the logo, reading-sized type, a sidebar
+  Site theme: cool neutrals with the blue accent from the logo, reading-sized type, a sidebar
   that can be hidden on wide viewports, and cross-page view transitions.
 */
 
 /* Palette, dark mode (Starlight's default). */
 :root {
-  --sl-color-white: hsl(40, 25%, 96%);
-  --sl-color-gray-1: hsl(36, 14%, 88%);
-  --sl-color-gray-2: hsl(34, 9%, 76%);
-  --sl-color-gray-3: hsl(30, 6%, 57%);
-  --sl-color-gray-4: hsl(30, 5%, 38%);
-  --sl-color-gray-5: hsl(30, 6%, 24%);
-  --sl-color-gray-6: hsl(30, 7%, 15%);
-  --sl-color-black: hsl(30, 9%, 9%);
+  --sl-color-white: hsl(220, 16%, 96%);
+  --sl-color-gray-1: hsl(220, 12%, 87%);
+  --sl-color-gray-2: hsl(220, 8%, 74%);
+  --sl-color-gray-3: hsl(220, 6%, 56%);
+  --sl-color-gray-4: hsl(220, 6%, 38%);
+  --sl-color-gray-5: hsl(220, 8%, 24%);
+  --sl-color-gray-6: hsl(220, 10%, 15%);
+  --sl-color-black: hsl(220, 13%, 8.5%);
 
-  --sl-color-accent-low: hsl(14, 40%, 18%);
-  --sl-color-accent: hsl(15, 80%, 58%);
-  --sl-color-accent-high: hsl(20, 95%, 80%);
+  --sl-color-accent-low: hsl(219, 45%, 20%);
+  --sl-color-accent: hsl(217, 91%, 64%);
+  --sl-color-accent-high: hsl(214, 100%, 84%);
 
   --sl-color-bg-nav: var(--sl-color-black);
   --sl-color-bg-sidebar: var(--sl-color-black);
-  --sl-color-bg-inline-code: hsl(30, 7%, 17%);
-  --sl-color-hairline: hsl(30, 7%, 16%);
-  --sl-color-hairline-light: hsl(30, 6%, 21%);
-  --sl-color-hairline-shade: hsl(30, 7%, 16%);
-  --sl-color-backdrop-overlay: hsla(30, 9%, 6%, 0.7);
+  --sl-color-bg-inline-code: hsl(220, 10%, 17%);
+  --sl-color-hairline: hsl(220, 10%, 16%);
+  --sl-color-hairline-light: hsl(220, 8%, 21%);
+  --sl-color-hairline-shade: hsl(220, 10%, 16%);
+  --sl-color-backdrop-overlay: hsla(220, 15%, 5%, 0.7);
 
   --sl-hue-orange: 34;
   --sl-hue-red: 4;
@@ -44,27 +44,27 @@
 
 /* Palette, light mode. */
 :root[data-theme='light'] {
-  --sl-color-white: hsl(30, 15%, 10%);
-  --sl-color-gray-1: hsl(30, 12%, 16%);
-  --sl-color-gray-2: hsl(30, 8%, 26%);
-  --sl-color-gray-3: hsl(30, 6%, 40%);
-  --sl-color-gray-4: hsl(32, 5%, 56%);
-  --sl-color-gray-5: hsl(36, 9%, 80%);
-  --sl-color-gray-6: hsl(38, 22%, 93%);
-  --sl-color-gray-7: hsl(40, 30%, 96.5%);
-  --sl-color-black: hsl(40, 33%, 99%);
+  --sl-color-white: hsl(220, 20%, 10%);
+  --sl-color-gray-1: hsl(220, 14%, 17%);
+  --sl-color-gray-2: hsl(220, 9%, 28%);
+  --sl-color-gray-3: hsl(220, 7%, 42%);
+  --sl-color-gray-4: hsl(220, 6%, 58%);
+  --sl-color-gray-5: hsl(220, 10%, 82%);
+  --sl-color-gray-6: hsl(220, 16%, 94%);
+  --sl-color-gray-7: hsl(220, 20%, 97%);
+  --sl-color-black: hsl(0, 0%, 100%);
 
-  --sl-color-accent-low: hsl(18, 85%, 93%);
-  --sl-color-accent: hsl(14, 72%, 45%);
-  --sl-color-accent-high: hsl(13, 70%, 32%);
+  --sl-color-accent-low: hsl(214, 95%, 94%);
+  --sl-color-accent: hsl(221, 83%, 50%);
+  --sl-color-accent-high: hsl(224, 76%, 36%);
 
   --sl-color-bg-nav: var(--sl-color-black);
-  --sl-color-bg-sidebar: hsl(40, 30%, 97.5%);
-  --sl-color-bg-inline-code: hsl(36, 25%, 93%);
-  --sl-color-hairline: hsl(36, 14%, 90%);
-  --sl-color-hairline-light: hsl(36, 12%, 86%);
-  --sl-color-hairline-shade: hsl(36, 14%, 88%);
-  --sl-color-backdrop-overlay: hsla(30, 10%, 30%, 0.35);
+  --sl-color-bg-sidebar: hsl(220, 20%, 98%);
+  --sl-color-bg-inline-code: hsl(220, 16%, 95%);
+  --sl-color-hairline: hsl(220, 14%, 92%);
+  --sl-color-hairline-light: hsl(220, 12%, 88%);
+  --sl-color-hairline-shade: hsl(220, 14%, 90%);
+  --sl-color-backdrop-overlay: hsla(220, 15%, 20%, 0.3);
 }
 
 @media (min-width: 50rem) {
